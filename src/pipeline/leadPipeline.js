@@ -43,8 +43,8 @@ async function runPipeline() {
     console.log('\n--- STEP 4: AI Qualification ---');
     let qualifiedLeads = [];
     for (const lead of filteredLeads) {
-        // Introduce small delay to avoid rate-limiting?
-        await new Promise(r => setTimeout(r, 1000));
+        // Increase delay to avoid 429 rate-limiting on Gemini free tier (15 RPM)
+        await new Promise(r => setTimeout(r, 4500));
         
         console.log(`Qualifying: ${lead.name}`);
         const aiAnalysis = await qualifyLead(lead);
