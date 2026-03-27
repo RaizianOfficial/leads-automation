@@ -30,6 +30,7 @@ jobs:
           NODE_ENV: production
 
           OPENAI_API_KEY: "${{ secrets.OPENAI_API_KEY }}"
+          GEMINI_API_KEY: "${{ secrets.GEMINI_API_KEY }}"
 
           FIREBASE_PROJECT_ID: "${{ secrets.FIREBASE_PROJECT_ID }}"
           FIREBASE_CLIENT_EMAIL: "${{ secrets.FIREBASE_CLIENT_EMAIL }}"
@@ -50,4 +51,4 @@ jobs:
 
           DAILY_LEAD_LIMIT: "${{ secrets.DAILY_LEAD_LIMIT }}"
           SCRAPE_LIMIT: "${{ secrets.SCRAPE_LIMIT }}"
-          MIN_SCORE_THRESHOLD: "${{ secrets.MIN_SCORE_THRESHOLD }}"
+          MIN_SCORE_THRESHOLD: "20"
