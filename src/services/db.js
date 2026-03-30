@@ -95,4 +95,39 @@ async function getLeadsForFollowup() {
     return snapshot.docs.map(doc => doc.data());
 }
 
-module.exports = { saveLead, isLeadSent, markLeadAsSent, updateLeadMeta, logReply, getLeadsForFollowup };
+/**
+ * Checks if a message hash already exists in past sent messages across all leads.
+ * Prevents duplicate identical messages.
+ * @param {string} hash - The MD5 or SHA256 hash of the message text.
+ * @returns {Promise<boolean>} - True if it exists, false otherwise.
+ */
+async function isMessageHashDuplicate(hash) {
+    if (!hash) return false;
+    
+    // Check global sent messages collection or specific message log collection
+    // Using a dedicated 'message_hashes' collection is fastest
+    const hashDoc = await db.collection('message_hashes').doc(hash).get();
+    return hashDoc.exists;
+}
+
+/**
+ * Saves a message hash globally to mark it as sent.
+ * @param {string} hash - The hash to save.
+ */
+async function saveMessageHash(hash) {
+    if (!hash) return;
+    await db.collection('message_hashes').doc(hash).set({
+        createdAt: new Date().toISOString()
+    });
+}
+
+module.exports = { 
+    saveLead, 
+    isLeadSent, 
+    markLeadAsSent, 
+    updateLeadMeta, 
+    logReply, 
+    getLeadsForFollowup,
+    isMessageHashDuplicate,
+    saveMessageHash
+};

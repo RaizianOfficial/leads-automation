@@ -145,15 +145,51 @@ async function sendBulkMessages(leads) {
             continue;
         }
 
-        const messageBody = generatePersonalizedMessage(lead);
-        console.log(`\n📤 Sending to: ${lead.name} (${lead.phone})`);
+        console.log(`\n📤 Preparing message for: ${lead.name} (${lead.phone})`);
 
-        const success = await sendMessage(lead.phone, messageBody);
+        let messageData;
+        let isDuplicate = true;
+        let retries = 0;
+
+        // Duplicate Message Prevention Loop (Retry up to 3 times)
+        while (isDuplicate && retries < 3) {
+            messageData = generatePersonalizedMessage(lead);
+            
+            // Wait, we need the db module to have isMessageHashDuplicate 
+            // We'll require it at the top of the file, it's already there
+            const { isMessageHashDuplicate } = require('./db');
+            
+            const duplicateFound = await isMessageHashDuplicate(messageData.hash);
+            
+            if (duplicateFound) {
+                retries++;
+                console.log(`   🔄 Hash collision detected (Try ${retries}/3). Regenerating message...`);
+            } else {
+                isDuplicate = false;
+            }
+        }
+
+        if (isDuplicate) {
+            console.warn(`⚠️  Skipping lead "${lead.name}" — could not generate a unique message after 3 attempts.`);
+            continue;
+        }
+
+        console.log(`   📝 Sending variation: ${messageData.variation_id}`);
+        const success = await sendMessage(lead.phone, messageData.text);
 
         if (success) {
             sentCount++;
+            
+            // Save hash globally to prevent future duplicates across any lead
+            const { saveMessageHash } = require('./db');
+            await saveMessageHash(messageData.hash);
+
+            // Update lead doc with deep meta-data
             await updateLeadMeta(lead.phone, {
                 message_sent: true,
+                message_text: messageData.text,
+                message_hash: messageData.hash,
+                variation_id: messageData.variation_id,
                 sent_at: new Date().toISOString(),
                 status: 'cold' // Will upgrade to 'warm' if they reply
             });
