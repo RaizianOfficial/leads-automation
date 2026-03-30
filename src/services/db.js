@@ -65,7 +65,7 @@ async function updateLeadMeta(phone, data) {
 }
 
 /**
- * Logs an incoming WhatsApp reply.
+ * Logs an incoming WhatsApp reply and sets lead status to 'warm'.
  * @param {string} phoneId - Caller's phone ID.
  * @param {string} messageText - The text of the reply.
  */
@@ -77,8 +77,22 @@ async function logReply(phoneId, messageText) {
     await leadRef.set({
         reply_received: true,
         last_reply: messageText,
-        reply_at: new Date().toISOString()
+        reply_at: new Date().toISOString(),
+        status: 'warm' // Lead replied, upgrading to warm
     }, { merge: true });
 }
 
-module.exports = { saveLead, isLeadSent, markLeadAsSent, updateLeadMeta, logReply };
+/**
+ * Fetch unresolved leads for follow-up sequence.
+ * @returns {Promise<Array>} - List of leads to follow up.
+ */
+async function getLeadsForFollowup() {
+    const snapshot = await db.collection('leads')
+        .where('message_sent', '==', true)
+        .where('status', 'in', ['cold', 'warm'])
+        .get();
+        
+    return snapshot.docs.map(doc => doc.data());
+}
+
+module.exports = { saveLead, isLeadSent, markLeadAsSent, updateLeadMeta, logReply, getLeadsForFollowup };

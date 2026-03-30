@@ -16,6 +16,15 @@ const { randomDelay } = require('../utils/delay');
 const { generatePersonalizedMessage } = require('../utils/messageGenerator');
 
 let sock = null;
+let _isConnected = false; // Tracks real-time WA connection state
+
+/**
+ * Returns true if WhatsApp socket is alive and connected.
+ * @returns {boolean}
+ */
+function isWhatsAppConnected() {
+    return _isConnected;
+}
 
 /**
  * Initializes the WhatsApp connection and authentication using Baileys.
@@ -42,6 +51,7 @@ async function initWhatsApp() {
         }
 
         if (connection === 'close') {
+            _isConnected = false;
             const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log(`WhatsApp connection closed. Reconnecting: ${shouldReconnect}`, lastDisconnect.error?.message);
             
@@ -51,6 +61,7 @@ async function initWhatsApp() {
                 console.error("WhatsApp session logged out. Please delete the 'wa_auth_info' folder and scan QR again.");
             }
         } else if (connection === 'open') {
+            _isConnected = true;
             console.log('\n✅ WhatsApp successfully connected and ready to send messages!');
         }
     });
@@ -179,6 +190,7 @@ async function sendBulkMessages(leads) {
 
 module.exports = {
     initWhatsApp,
+    isWhatsAppConnected,
     sendMessage,
     sendBulkMessages
 };
