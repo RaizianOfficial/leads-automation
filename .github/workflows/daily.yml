@@ -52,3 +52,6 @@ jobs:
           DAILY_LEAD_LIMIT: "${{ secrets.DAILY_LEAD_LIMIT }}"
           SCRAPE_LIMIT: "${{ secrets.SCRAPE_LIMIT }}"
           MIN_SCORE_THRESHOLD: "20"
+
+          GREEN_API_INSTANCE_ID: "${{ secrets.GREEN_API_INSTANCE_ID }}"
+          GREEN_API_TOKEN: "${{ secrets.GREEN_API_TOKEN }}"
